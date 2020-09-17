@@ -1,16 +1,16 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
-const Genre = mongoose.model(
-  "Genre",
-  new mongoose.Schema({
-    name: {
-      type: String,
-      required: true,
-      enum: ["Action", "Horror", "Comedy", "Drama", "Romance"],
-    },
-  })
-);
+const validGenres = ["Action", "Horror", "Comedy", "Drama", "Romance", "Sci-fi"];
+const GenreSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    enum: validGenres,
+  },
+});
+
+const Genre = mongoose.model("Genre", GenreSchema);
 
 function validateGenre(genre) {
   const schema = {
@@ -20,4 +20,5 @@ function validateGenre(genre) {
 }
 
 exports.Genre = Genre;
+exports.GenreSchema = GenreSchema;
 exports.validate = validateGenre;
