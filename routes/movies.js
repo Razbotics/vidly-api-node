@@ -30,15 +30,19 @@ router.post("/", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const genre = await Genre.find({ name: req.body.genreName });
-    if (genre.length === 0)
+    const [genre] = await Genre.find({ name: req.body.genreName });
+    if (!genre)
       return res.status(404).send(`${req.body.genreName} is not a valid Genre`);
 
+    debug(genre);
     const newMovie = new Movie({
       title: req.body.title,
       numberInStock: req.body.numberInStock,
       dailyRentalRate: req.body.dailyRentalRate,
-      genre: genre[0],
+      genre: {
+        _id: genre._id,
+        name: genre.name,
+      },
     });
 
     const result = await newMovie.save();
@@ -53,8 +57,8 @@ router.put("/:id", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const genre = await Genre.find({ name: req.body.genreName });
-    if (genre.length === 0)
+    const [genre] = await Genre.find({ name: req.body.genreName });
+    if (!genre)
       return res.status(404).send(`${req.body.genreName} is not a valid Genre`);
 
     const movie = await Movie.findByIdAndUpdate(
@@ -64,7 +68,10 @@ router.put("/:id", async (req, res) => {
           title: req.body.title,
           numberInStock: req.body.numberInStock,
           dailyRentalRate: req.body.dailyRentalRate,
-          genre: genre[0],
+          genre: {
+            _id: genre._id,
+            name: genre.name,
+          },
         },
       },
       { new: true, useFindAndModify: false }
