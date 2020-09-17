@@ -1,20 +1,8 @@
+const { Genre, validate } = require("../models/genre");
 const express = require("express");
-const Joi = require("joi");
-const mongoose = require("mongoose");
 const debug = require("debug")("app:genres");
 
 const router = express.Router();
-
-const Genre = mongoose.model(
-  "Genre",
-  new mongoose.Schema({
-    name: {
-      type: String,
-      required: true,
-      enum: ["Action", "Horror", "Comedy", "Drama", "Romance"],
-    },
-  })
-);
 
 router.get("/", async (req, res) => {
   try {
@@ -84,7 +72,7 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const genre = await Genre.deleteOne({ _id: req.params.id });
+    const genre = await Genre.findByIdAndDelete({ _id: req.params.id });
     if (!genre)
       return res.status(404).send("The genre with the given ID was not found.");
     res.send(genre);
@@ -92,12 +80,5 @@ router.delete("/:id", async (req, res) => {
     return res.status(400).send(ex.message);
   }
 });
-
-function validateGenre(genre) {
-  const schema = {
-    name: Joi.string().min(3).required(),
-  };
-  return Joi.validate(genre, schema);
-}
 
 module.exports = router;
