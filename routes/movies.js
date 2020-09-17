@@ -10,9 +10,19 @@ const GenreSchema = new mongoose.Schema({
 });
 
 const MovieSchema = new mongoose.Schema({
-  title: String,
-  numberInStock: Number,
-  dailyRentalRate: Number,
+  title: {
+    type: String,
+    required: true,
+  },
+  numberInStock: {
+    type: Number,
+    min: 0
+  },
+  dailyRentalRate: {
+    type: Number,
+    min: 0,
+    max: 10
+  },
   genre: GenreSchema,
 });
 
@@ -20,14 +30,18 @@ const Movie = mongoose.model("Movie", MovieSchema);
 
 async function createMovie() {
   const movie = new Movie({
-    title: "Terminator",
-    numberInStock: 10,
+    // title: "Terminator",
+    numberInStock: 5,
     dailyRentalRate: 8,
     genre: { name: "Action" },
   });
 
-  const result = await movie.save();
-  console.log(result);
+  try {
+    const result = await movie.save();
+    console.log(result);
+  } catch (error) {
+    debug(error.message);
+  }
 }
 
 async function getMovies() {
@@ -68,7 +82,7 @@ async function removeMovie(id) {
 }
 
 // removeMovie("5f62752f89c8981554177ac4");
-updateMovie_("5f5c7e995744713145f3c940");
+// updateMovie_("5f5c7e995744713145f3c940");
 // getMovies();
 // createMovie();
 
