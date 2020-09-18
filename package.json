@@ -12,7 +12,9 @@
   "dependencies": {
     "debug": "^4.1.1",
     "express": "^4.16.2",
+    "fawn": "^2.1.5",
     "joi": "^13.1.0",
+    "joi-objectid": "^3.0.1",
     "mongoose": "^5.10.5"
   }
 }

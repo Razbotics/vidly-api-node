@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
       return res.status(404).send(`${req.body.genreName} is not a valid Genre`);
 
     debug(genre);
-    const newMovie = new Movie({
+    const movie = new Movie({
       title: req.body.title,
       numberInStock: req.body.numberInStock,
       dailyRentalRate: req.body.dailyRentalRate,
@@ -45,8 +45,8 @@ router.post("/", async (req, res) => {
       },
     });
 
-    const result = await newMovie.save();
-    return res.send(result);
+    await movie.save();
+    return res.send(movie);
   } catch (ex) {
     return res.status(400).send(ex.message);
   }
