@@ -1,25 +1,19 @@
 const { User, validate } = require("../models/user");
+const auth = require("../middleware/auth");
+const _ = require("lodash");
+const bcrypt = require("bcrypt");
 const express = require("express");
 const debug = require("debug")("app:users");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/me", auth, async (req, res) => {
   try {
-    const users = await User.find();
-    return res.send(users);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
-
-router.get("/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user)
-      return res.status(404).send("The user with the given ID was not found.");
+    const user = await User.findById(req.user._id).select("-password -__v");
+    if (!user) return res.status(400).send("You dont belong here");
     return res.send(user);
   } catch (ex) {
-    return res.status(400).send(ex.message);
+    debug(ex);
+    return res.status(500).send("Something went wrong");
   }
 });
 
@@ -28,50 +22,21 @@ router.post("/", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const user = new User({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-    });
+    let user = await User.findOne({ email: req.body.email });
+    if (user) return res.status(400).send("User already registered");
 
+    user = new User(_.pick(req.body, ["name", "email", "password"]));
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
     await user.save();
-    return res.send(user);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
 
-router.put("/:id", async (req, res) => {
-  try {
-    const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    const token = user.generateAuthToken();
 
-    const user = await User.findByIdAndUpdate(
-      { _id: req.params.id },
-      {
-        $set: {
-          name: req.body.name,
-          email: req.body.email,
-          password: req.body.password,
-        },
-      },
-      { new: true, useFindAndModify: false }
-    );
-    if (!user)
-      return res.status(404).send("The user with the given ID was not found.");
-    return res.send(user);
+    return res
+      .header("x-auth-token", token)
+      .send(_.pick(user, ["_id", "name", "email"]));
   } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
-
-router.delete("/:id", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete({ _id: req.params.id });
-    if (!user)
-      return res.status(404).send("The user with the given ID was not found.");
-    res.send(user);
-  } catch (ex) {
+    debug(ex);
     return res.status(400).send(ex.message);
   }
 });
