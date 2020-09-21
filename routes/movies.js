@@ -1,3 +1,4 @@
+const asyncMiddleware = require("../middleware/async");
 const { Movie, validate } = require("../models/movie");
 const { Genre } = require("../models/genre");
 const auth = require("../middleware/auth");
@@ -6,34 +7,33 @@ const debug = require("debug")("app:movies");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  try {
+router.get(
+  "/",
+  asyncMiddleware(async (req, res) => {
     const movies = await Movie.find();
     return res.send(movies);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
-router.get("/:id", async (req, res) => {
-  try {
+router.get(
+  "/:id",
+  asyncMiddleware(async (req, res) => {
     const movie = await Movie.findById(req.params.id);
     if (!movie)
       return res.status(404).send("The movie with the given ID was not found.");
     return res.send(movie);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
-router.post("/", auth, async (req, res) => {
-  try {
+router.post(
+  "/",
+  auth,
+  asyncMiddleware(async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const [genre] = await Genre.find({ name: req.body.genreName });
-    if (!genre)
-      return res.status(404).send(`${req.body.genreName} is not a valid Genre`);
+    const genre = await Genre.findById(req.body.genreId);
+    if (!genre) return res.status(404).send("Invalid genre Id");
 
     debug(genre);
     const movie = new Movie({
@@ -48,19 +48,18 @@ router.post("/", auth, async (req, res) => {
 
     await movie.save();
     return res.send(movie);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
-router.put("/:id", auth, async (req, res) => {
-  try {
+router.put(
+  "/:id",
+  auth,
+  asyncMiddleware(async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const [genre] = await Genre.find({ name: req.body.genreName });
-    if (!genre)
-      return res.status(404).send(`${req.body.genreName} is not a valid Genre`);
+    const genre = await Genre.findById(req.body.genreId);
+    if (!genre) return res.status(404).send("Invalid genre Id");
 
     const movie = await Movie.findByIdAndUpdate(
       { _id: req.params.id },
@@ -80,20 +79,18 @@ router.put("/:id", auth, async (req, res) => {
     if (!movie)
       return res.status(404).send("The movie with the given ID was not found.");
     return res.send(movie);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
-router.delete("/:id", auth, async (req, res) => {
-  try {
+router.delete(
+  "/:id",
+  auth,
+  asyncMiddleware(async (req, res) => {
     const movie = await Movie.findByIdAndDelete({ _id: req.params.id });
     if (!movie)
       return res.status(404).send("The movie with the given ID was not found.");
     res.send(movie);
-  } catch (ex) {
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
 module.exports = router;

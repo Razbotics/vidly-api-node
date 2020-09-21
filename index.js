@@ -3,6 +3,7 @@ process.env.vidly_jwtPrivateKey = "mySecureKey";
 const config = require("config");
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
+const error = require("../middleware/error");
 const genres = require("./routes/genres");
 const movies = require("./routes/movies");
 const customers = require("./routes/customers");
@@ -26,6 +27,7 @@ app.use("/api/customers", customers);
 app.use("/api/rentals", rentals);
 app.use("/api/users", users);
 app.use("/api/auth", auth);
+app.use(error);
 
 mongoose
   .connect("mongodb://localhost/vidly", {

@@ -1,3 +1,4 @@
+const asyncMiddleware = require("../middleware/async");
 const { User, validate } = require("../models/user");
 const auth = require("../middleware/auth");
 const _ = require("lodash");
@@ -6,19 +7,19 @@ const express = require("express");
 const debug = require("debug")("app:users");
 const router = express.Router();
 
-router.get("/me", auth, async (req, res) => {
-  try {
+router.get(
+  "/me",
+  auth,
+  asyncMiddleware(async (req, res) => {
     const user = await User.findById(req.user._id).select("-password -__v");
     if (!user) return res.status(400).send("You dont belong here");
     return res.send(user);
-  } catch (ex) {
-    debug(ex);
-    return res.status(500).send("Something went wrong");
-  }
-});
+  })
+);
 
-router.post("/", async (req, res) => {
-  try {
+router.post(
+  "/",
+  asyncMiddleware(async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -35,10 +36,7 @@ router.post("/", async (req, res) => {
     return res
       .header("x-auth-token", token)
       .send(_.pick(user, ["_id", "name", "email"]));
-  } catch (ex) {
-    debug(ex);
-    return res.status(400).send(ex.message);
-  }
-});
+  })
+);
 
 module.exports = router;
